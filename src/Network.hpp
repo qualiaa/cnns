@@ -15,6 +15,11 @@ public:
     using VecList = std::vector<Vec>;
     using MatList = std::vector<Mat>;
 
+    static const std::function<Vec(Vec)> activation;
+    static const std::function<Vec(Vec)> dActivation;
+    static const std::function<value_type(Vec const&, Vec const&)> cost;
+    static const std::function<Vec(Vec const&, Vec const&)> dCost;
+
 private:
     const size_t layers;
     MatList weights;
@@ -54,10 +59,5 @@ private:
     static Vec dMSE(Vec const& y, Vec const& a) {
         return a - y;
     }
-
-    static const std::function<Vec(Vec)> activation;
-    static const std::function<Vec(Vec)> dActivation;
-    static const std::function<value_type(Vec const&, Vec const&)> cost;
-    static const std::function<Vec(Vec const&, Vec const&)> dCost;
 };
 }
