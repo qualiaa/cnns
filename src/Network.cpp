@@ -118,7 +118,7 @@ void Network::train(Mat const& data, Mat const& classes, double learning_rate)
         // back-propagation + gradient descent
         for (int l = layers - 1; l > 1; --l) {
             // update deltas with dC wrt weights and biases in l
-            delta_weights[l] += arma::dot(running_derivative, activations[l]);
+            delta_weights[l] += running_derivative * activations[l-1].t();
             std::cout << delta_weights[l];
             delta_biases[l] += running_derivative;
 
