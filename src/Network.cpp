@@ -39,7 +39,6 @@ Network::Network(std::vector<int> const& sizes)
         const int n_in = sizes[l-1], n_out = sizes[l];
 
         weights[l] = Mat(n_out, n_in, arma::fill::randu);
-        std::cout << l << ": " << n_out << std::endl;
         biases[l] = Vec(n_out, arma::fill::randu);
     }
 }
@@ -119,7 +118,6 @@ void Network::train(Mat const& data, Mat const& classes, double learning_rate)
         for (int l = layers - 1; l > 1; --l) {
             // update deltas with dC wrt weights and biases in l
             delta_weights[l] += running_derivative * activations[l-1].t();
-            std::cout << delta_weights[l];
             delta_biases[l] += running_derivative;
 
             // update delta
@@ -128,10 +126,7 @@ void Network::train(Mat const& data, Mat const& classes, double learning_rate)
             // modify weights according to gradient descent
             weights[l] -= learning_rate * delta_weights[l];
             biases[l]  -= learning_rate * delta_biases[l];
-
         }
-        std::cout << "Wanted: " << y;
-        std::cout << "Found: " << activations.back();
     }
 }
 }
