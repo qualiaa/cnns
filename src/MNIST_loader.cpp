@@ -34,8 +34,7 @@ Data load_MNIST_data()
     return Data(
         load_image_set(train_image_path),
         load_label_set(train_label_path),
-        std::vector<Image>(),
-        //load_image_set(test_image_path),
+        load_image_set(test_image_path),
         load_label_set(test_label_path)
     );
 
@@ -92,25 +91,19 @@ std::vector<Image> load_image_set(std::string const& path)
     file.read(reinterpret_cast<char*>(&image_y), 4);
 
     std::vector<Image> images(n_images, Image(image_x, image_y));
-    int i = 0;
+    arma::Mat<byte> flip_mat({0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0});
+    flip_mat.reshape(4,4);
     for (auto& im : images) {
-        file.read(reinterpret_cast<char*>(im.memptr()),image_x * image_y);
+        file.read(reinterpret_cast<char*>(im.memptr()), image_x * image_y);
+        im = im.t();
 
-        std::stringstream s;
-        s << "file" << i++;
-        std::ofstream of(s.str());
-        of << "P2" << std::endl;
-        of << image_x << " " << image_y << std::endl;
-        of << 255 << std::endl;
-        for (int j = 0; j < image_y; ++j) {
-            for (int i = 0; i < image_x; ++i) {
-                of << std::setw(4) << (int)im.at(j, i);
-            }
-            of << '\n';
+        // MNIST is broken? So need to fix it
+        // Every 4 columns are flipped in x
+        for (int col = 0; col < image_x; col += 4) {
+            im.cols(col, col+3) = im.cols(col, col+3) * flip_mat;
         }
     }
 
-                
     return images;
 }
 
