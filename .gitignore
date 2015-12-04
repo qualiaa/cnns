@@ -1,3 +1,6 @@
 *.sw*
+*.o
 build
 a.out
+data
+cnet
