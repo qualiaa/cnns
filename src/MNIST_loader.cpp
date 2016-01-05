@@ -15,10 +15,10 @@ std::basic_istream<char>& operator>>(std::basic_istream<char>& is, arma::Mat<uns
 
 namespace loader {
 
-using Data = std::tuple<std::vector<Image>, // train images
-                        std::vector<Label>, // train classes
-                        std::vector<Image>, // test images
-                        std::vector<Label>>; // test classes
+using Data = std::tuple<std::vector<Image>,  // training images
+                        std::vector<Label>,  // training labels
+                        std::vector<Image>,  // testing images
+                        std::vector<Label>>; // testing labels
 
 Label label_from_number(byte scalar_label);
 std::vector<Image> load_image_set(std::string const& path);
@@ -48,7 +48,6 @@ std::vector<Label> load_label_set(std::string const& path)
     if (not file.is_open()) {
         throw std::runtime_error("Could not open file: " + path);
     }
-
 
     // validate file
     int32_t magic_number;
@@ -91,16 +90,19 @@ std::vector<Image> load_image_set(std::string const& path)
     file.read(reinterpret_cast<char*>(&image_y), 4);
 
     std::vector<Image> images(n_images, Image(image_x, image_y));
-    arma::Mat<byte> flip_mat({0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,0});
-    flip_mat.reshape(4,4);
+    arma::Mat<byte> flipped_identity({0, 0, 0, 1,
+                                      0, 0, 1, 0,
+                                      0, 1, 0, 0,
+                                      1, 0, 0, 0});
+    flipped_identity.reshape(4, 4);
     for (auto& im : images) {
         file.read(reinterpret_cast<char*>(im.memptr()), image_x * image_y);
         im = im.t();
 
-        // MNIST is broken? So need to fix it
+        // MNIST is broken, so this is needed to fix it
         // Every 4 columns are flipped in x
         for (int col = 0; col < image_x; col += 4) {
-            im.cols(col, col+3) = im.cols(col, col+3) * flip_mat;
+            im.cols(col, col+3) = im.cols(col, col+3) * flipped_identity;
         }
     }
 
@@ -112,7 +114,7 @@ Label label_from_number(byte scalar_label)
     // it is necessary to convert from a scalar [0,9] to a vector representing
     // the desired output of the neural network, which is a 10-element zero
     // vector with a single 1 at the label index.
-    Label output_label(10,arma::fill::zeros);
+    Label output_label(10, arma::fill::zeros);
     output_label[scalar_label] = 1;
     return output_label;
 }
