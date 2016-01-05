@@ -34,7 +34,9 @@ public:
 
 private:
     std::tuple<VecList,VecList> feed_forward(Vec const& x) const;
-    VecList back_propagate(Vec const& x);
+    std::tuple<MatList, VecList> backpropagate(VecList const& activations,
+                                               VecList const& zs,
+                                               Vec const& expected_output);
 
     static Vec sigmoid(Vec z) {
         return z.transform([] (auto z) {
