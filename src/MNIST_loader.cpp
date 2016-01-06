@@ -44,7 +44,8 @@ std::vector<Label> load_label_set(std::string const& path)
 {
     using Iter = std::istream_iterator<byte>;
 
-    std::ifstream file(path, std::ios::in | std::ios::binary);
+    std::basic_ifstream<char> file(path, std::ios::in | std::ios::binary);
+    std::noskipws(file);
     if (not file.is_open()) {
         throw std::runtime_error("Could not open file: " + path);
     }
@@ -61,11 +62,23 @@ std::vector<Label> load_label_set(std::string const& path)
     // read number of data, preallocate array
     int32_t n_labels;
     file.read(reinterpret_cast<char*>(&n_labels), 4);
-    std::vector<Label> labels(n_labels);
+    std::vector<Label> labels;
+    labels.reserve(n_labels);
 
     // copy data
-    std::transform(Iter(file), Iter(), labels.begin(), label_from_number);
-                
+    std::transform(Iter(file), Iter(), back_inserter(labels), label_from_number);
+
+    for (size_t i = 0; i < labels.size(); ++i) {
+        try {
+        if (labels[i].n_elem != 10) {
+            throw std::runtime_error(std::to_string(i));
+        }
+        }
+        catch(std::runtime_error const& e) {
+            std::cerr << e.what() << '\n';
+        }
+    }
+
     return labels;
 }
 
@@ -105,7 +118,6 @@ std::vector<Image> load_image_set(std::string const& path)
             im.cols(col, col+3) = im.cols(col, col+3) * flipped_identity;
         }
     }
-
     return images;
 }
 

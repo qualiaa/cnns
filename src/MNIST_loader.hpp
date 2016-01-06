@@ -7,7 +7,7 @@ namespace loader {
 
 using byte = unsigned char;
 
-using Label = arma::Col<byte>;
+using Label = arma::Col<double>;
 using Image = arma::Mat<byte>;
 
 std::tuple<std::vector<Image>, // train images
