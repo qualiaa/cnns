@@ -77,12 +77,12 @@ std::tuple<MatList, VecList> Network::backpropagate(VecList const& activations,
 
     // back-propagation + gradient descent
     for (int l = layers - 1; l > 1; --l) {
-        delta_weights[l] = Mat(size(weights[l]), arma::fill::zeros);
-        delta_biases[l] = Vec(size(biases[l]), arma::fill::zeros);
+        //delta_weights[l] = Mat(size(weights[l]), arma::fill::zeros);
+        //delta_biases[l] = Vec(size(biases[l]), arma::fill::zeros);
 
         // update deltas with dC wrt weights and biases in l
-        delta_weights[l] += running_derivative * activations[l-1].t();
-        delta_biases[l] += running_derivative;
+        delta_weights[l] = running_derivative * activations[l-1].t();
+        delta_biases[l] = running_derivative;
 
         // update delta
         running_derivative = (weights[l].t() * running_derivative) % dActivation(zs[l-1]);
@@ -116,43 +116,15 @@ void Network::train(Mat const& data, Mat const& classes, double learning_rate)
 
     learning_rate /= n_instances;
 
-
-    /*
-    MatList delta_weights(layers);
-    VecList delta_biases(layers);
-
-    for (unsigned l = 1; l < layers; ++l) {
-        delta_weights[l] = Mat(size(weights[l]), arma::fill::zeros);
-        delta_biases[l] = Vec(size(biases[l]), arma::fill::zeros);
-    }
-    */
-
     for (unsigned i = 0; i < n_instances; ++i) {
         const Vec x = data.row(i).t();
         const Vec y = classes.row(i).t();
 
         VecList activations, zs;
         std::tie(activations, zs) = feed_forward(x);
-        
-        /*
-        Vec running_derivative = dCda % dActivation(zs.back()); // delta
-
-        // back-propagation + gradient descent
-        for (int l = layers - 1; l > 1; --l) {
-            // update deltas with dC wrt weights and biases in l
-            delta_weights[l] += running_derivative * activations[l-1].t();
-            delta_biases[l] += running_derivative;
-
-            // update delta
-            running_derivative = (weights[l].t() * running_derivative) % dActivation(zs[l-1]);
-
-            // modify weights according to gradient descent
-        }
-        */
 
         MatList delta_weights;
         VecList delta_biases;
-
         std::tie(delta_weights, delta_biases) = backpropagate(activations, zs, y);
 
         for (int l = layers - 1; l > 1; --l) {
