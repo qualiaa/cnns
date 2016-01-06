@@ -27,3 +27,8 @@ $(DATA): %.dat : %.gz | $(DATADIR)
 	
 $(DATADIR):
 	mkdir "$@"
+
+clean:
+	-rm $(OBJS) $(PROGNAME)
+
+.PHONY: default clean
