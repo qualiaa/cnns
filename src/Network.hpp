@@ -29,6 +29,7 @@ public:
     Network(std::vector<int> const& size);
 
     Vec classify(Vec const& x) const;
+    VecList classify(VecList const& X) const;
 
     void train(Mat const& data, Mat const& classes, double learning_rate = 1.0);
 

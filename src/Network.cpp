@@ -65,6 +65,15 @@ Vec Network::classify(Vec const& x) const
     return std::get<0>(feed_forward(x)).back();
 }
 
+VecList Network::classify(VecList const& X) const
+{
+    VecList outputs;
+    std::transform(X.begin(), X.end(), std::back_inserter(outputs),
+                   [this] (auto const& x) { return classify(x); });
+    return outputs;
+    
+}
+
 std::tuple<MatList, VecList> Network::backpropagate(VecList const& activations,
                                                     VecList const& zs,
                                                     Vec const& y)
@@ -77,9 +86,6 @@ std::tuple<MatList, VecList> Network::backpropagate(VecList const& activations,
 
     // back-propagation + gradient descent
     for (int l = layers - 1; l > 1; --l) {
-        //delta_weights[l] = Mat(size(weights[l]), arma::fill::zeros);
-        //delta_biases[l] = Vec(size(biases[l]), arma::fill::zeros);
-
         // update deltas with dC wrt weights and biases in l
         delta_weights[l] = running_derivative * activations[l-1].t();
         delta_biases[l] = running_derivative;
@@ -93,23 +99,23 @@ std::tuple<MatList, VecList> Network::backpropagate(VecList const& activations,
 
 void Network::train(Mat const& data, Mat const& classes, double learning_rate)
 {
-    const unsigned n_instances = data.n_rows;
+    const unsigned n_instances = data.n_cols;
     std::stringstream stream;
-    if (data.n_rows != classes.n_rows) {
+    if (data.n_cols != classes.n_cols) {
         stream << "All training instances must have associated output data:\n"
-               << "Provided " << data.n_rows << " instances, "
-                              << classes.n_rows << " desired outputs\n";
+               << "Provided " << data.n_cols << " instances, "
+                              << classes.n_cols << " labels\n";
         throw std::invalid_argument(stream.str());
     }
-    if (data.n_cols != weights[1].n_cols) {
+    if (data.n_rows != weights[1].n_cols) {
         stream << "Instance data must fill input layer:\n"
-               << "Provided " << data.n_cols << " data, have "
+               << "Provided " << data.n_rows << " data, have "
                               << weights.front().n_cols << "input nodes\n";
         throw std::invalid_argument(stream.str());
     }
-    if (classes.n_cols != weights.back().n_rows) {
+    if (classes.n_rows != weights.back().n_rows) {
         stream << "Desired output data must match output layer:\n"
-               << "Provided " << classes.n_cols << " desired outputs, have "
+               << "Provided " << classes.n_rows << " desired outputs, have "
                               << weights.back().n_rows << " output nodes\n";
         throw std::invalid_argument(stream.str());
     }
@@ -117,8 +123,8 @@ void Network::train(Mat const& data, Mat const& classes, double learning_rate)
     learning_rate /= n_instances;
 
     for (unsigned i = 0; i < n_instances; ++i) {
-        const Vec x = data.row(i).t();
-        const Vec y = classes.row(i).t();
+        const Vec x = data.col(i);
+        const Vec y = classes.col(i);
 
         VecList activations, zs;
         std::tie(activations, zs) = feed_forward(x);
