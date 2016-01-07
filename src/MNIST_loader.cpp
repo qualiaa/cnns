@@ -20,7 +20,6 @@ using Data = std::tuple<std::vector<Image>,  // training images
                         std::vector<Image>,  // testing images
                         std::vector<Label>>; // testing labels
 
-Label label_from_number(byte scalar_label);
 std::vector<Image> load_image_set(std::string const& path);
 std::vector<Label> load_label_set(std::string const& path);
 
@@ -45,7 +44,7 @@ std::vector<Label> load_label_set(std::string const& path)
     using Iter = std::istream_iterator<byte>;
 
     std::basic_ifstream<char> file(path, std::ios::in | std::ios::binary);
-    std::noskipws(file);
+    std::noskipws(file); // stop 0x9 being interpreted as \t and skipped
     if (not file.is_open()) {
         throw std::runtime_error("Could not open file: " + path);
     }
@@ -62,22 +61,15 @@ std::vector<Label> load_label_set(std::string const& path)
     // read number of data, preallocate array
     int32_t n_labels;
     file.read(reinterpret_cast<char*>(&n_labels), 4);
+    /*
     std::vector<Label> labels;
     labels.reserve(n_labels);
+    */
 
     // copy data
-    std::transform(Iter(file), Iter(), back_inserter(labels), label_from_number);
-
-    for (size_t i = 0; i < labels.size(); ++i) {
-        try {
-        if (labels[i].n_elem != 10) {
-            throw std::runtime_error(std::to_string(i));
-        }
-        }
-        catch(std::runtime_error const& e) {
-            std::cerr << e.what() << '\n';
-        }
-    }
+    //std::transform(Iter(file), Iter(), back_inserter(labels), label_from_number);
+    std::vector<Label> labels{Iter(file), Iter()};
+    
 
     return labels;
 }
@@ -121,13 +113,4 @@ std::vector<Image> load_image_set(std::string const& path)
     return images;
 }
 
-Label label_from_number(byte scalar_label)
-{
-    // it is necessary to convert from a scalar [0,9] to a vector representing
-    // the desired output of the neural network, which is a 10-element zero
-    // vector with a single 1 at the label index.
-    Label output_label(10, arma::fill::zeros);
-    output_label[scalar_label] = 1;
-    return output_label;
-}
 }
